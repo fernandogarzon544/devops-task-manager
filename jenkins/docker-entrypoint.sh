@@ -12,4 +12,10 @@ if [ -S /var/run/docker.sock ]; then
     usermod -aG "$socket_group" jenkins
 fi
 
+# Copia privada para que el usuario jenkins pueda leer el kubeconfig del host.
+if [ -f /kube/config ]; then
+    install -d -m 0700 -o jenkins -g jenkins /var/jenkins_home/.kube
+    install -m 0600 -o jenkins -g jenkins /kube/config /var/jenkins_home/.kube/config
+fi
+
 exec gosu jenkins /usr/bin/tini -- /usr/local/bin/jenkins.sh "$@"

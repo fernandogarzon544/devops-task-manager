@@ -9,3 +9,5 @@ evidencia.txt
 
 .docker/
 test-report.xml
+
+.kube/

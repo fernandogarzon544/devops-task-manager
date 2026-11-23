@@ -143,3 +143,43 @@ curl http://127.0.0.1:8002/health
 ```
 
 La publicación del pipeline queda disponible en https://hub.docker.com/r/fernandogarzon/devops-taskapi. El disparo automático depende de que Jenkins y Docker Desktop estén encendidos en el equipo. Se comprueba haciendo un commit y esperando la consulta SCM configurada.
+
+## Semana 3. Despliegue en Kubernetes
+
+Activa Kubernetes en Docker Desktop y comprueba el contexto:
+
+```sh
+kubectl --context docker-desktop get nodes
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/
+kubectl rollout status deployment/taskapi -n devops-project --timeout=120s
+kubectl get pods,svc,hpa -n devops-project
+```
+
+Los cinco manifiestos definen el namespace devops-project, un Deployment con dos réplicas, el Service LoadBalancer en puerto 80, un ConfigMap y un HPA de dos a cinco réplicas al 60 % de CPU. El Deployment usa probes en /health y RollingUpdate con maxUnavailable=0 y maxSurge=1.
+
+El volumen emptyDir pertenece a cada pod y fsGroup=1000 permite escribir como appuser. Cada réplica tiene su propia base SQLite. Al eliminar un pod se pierden sus datos. Para compartir tareas entre réplicas en un servicio real haría falta una base externa.
+
+Si el clúster carece de metrics-server, instálalo antes de comprobar el HPA. En este entorno local se usó la versión oficial 0.9.1:
+
+```sh
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+kubectl -n kube-system patch deployment metrics-server --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl -n kube-system rollout status deployment/metrics-server
+kubectl top pods -n devops-project
+```
+
+La excepción TLS de metrics-server es específica del clúster de aprendizaje en Docker Desktop.
+
+Reconstruye Jenkins para incorporar kubectl y montar el kubeconfig del host:
+
+```sh
+cd jenkins
+docker compose -p actividad3-jenkins up -d --build
+```
+
+La imagen instala kubectl 1.36.1 para la arquitectura del contenedor y verifica su SHA-256. Esta versión coincide con el clúster local usado. El entrypoint guarda una copia privada del kubeconfig para Jenkins. Deploy copia esa configuración al workspace, adapta la dirección a host.docker.internal y usa insecure-skip-tls-verify solo para Docker Desktop, como indica la guía. El archivo temporal se elimina con cleanWs() y está excluido de Git y Docker.
+
+El quinto stage aplica los manifiestos, actualiza taskapi con la etiqueta exacta del build y espera kubectl rollout status durante un máximo de 120 segundos. JUnit se publica incluso si falla una etapa posterior.
+
+La API desplegada está en http://localhost/health y http://localhost/docs. El código fuente y las imágenes siguen en los mismos repositorios de GitHub y Docker Hub.
