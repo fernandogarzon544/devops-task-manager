@@ -141,3 +141,5 @@ docker pull fernandogarzon/devops-taskapi:latest
 docker run --rm -p 127.0.0.1:8002:8000 fernandogarzon/devops-taskapi:latest
 curl http://127.0.0.1:8002/health
 ```
+
+La publicación del pipeline queda disponible en https://hub.docker.com/r/fernandogarzon/devops-taskapi. El disparo automático depende de que Jenkins y Docker Desktop estén encendidos en el equipo. Se comprueba haciendo un commit y esperando la consulta SCM configurada.
