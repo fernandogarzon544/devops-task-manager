@@ -23,7 +23,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="DevOps Task Manager API",
     description="API REST de gestión de tareas — Proyecto Integrador DevOps",
-    version="1.1.0",
+    version="1.1.1",
 )
 
 app.include_router(tasks.router)
