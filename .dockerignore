@@ -8,3 +8,6 @@ tests
 README.md
 evidencia.txt
 *.zip
+
+.docker/
+test-report.xml

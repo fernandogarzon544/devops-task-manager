@@ -6,3 +6,6 @@ __pycache__/
 *.db-*
 .DS_Store
 evidencia.txt
+
+.docker/
+test-report.xml
