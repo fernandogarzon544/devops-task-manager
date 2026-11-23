@@ -183,3 +183,5 @@ La imagen instala kubectl 1.36.1 para la arquitectura del contenedor y verifica 
 El quinto stage aplica los manifiestos, actualiza taskapi con la etiqueta exacta del build y espera kubectl rollout status durante un máximo de 120 segundos. JUnit se publica incluso si falla una etapa posterior.
 
 La API desplegada está en http://localhost/health y http://localhost/docs. El código fuente y las imágenes siguen en los mismos repositorios de GitHub y Docker Hub.
+
+El Deployment espera 10 segundos en `preStop` antes de cerrar Uvicorn para dar tiempo a retirar el pod del tráfico durante el rollout. La disponibilidad se comprueba con peticiones reales durante el cambio.

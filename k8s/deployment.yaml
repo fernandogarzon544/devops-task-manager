@@ -27,6 +27,10 @@ spec:
         - name: taskapi
           image: fernandogarzon/devops-taskapi:latest
           imagePullPolicy: Always
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
           ports:
             - containerPort: 8000
           envFrom:
