@@ -110,3 +110,34 @@ El seed completa las cinco tareas y el comportamiento de reinicio que aparecen a
 ## Verificación realizada
 
 Las once pruebas pasaron. Se comprobaron la API local y en contenedor, Swagger, la identidad no privilegiada, la recarga al editar, la persistencia entre reinicios y las diez tareas iniciales. `evidencia.txt` en el ZIP conserva las salidas de la verificación.
+
+## Semana 2. Jenkins y Docker Hub
+
+La carpeta `jenkins/` levanta Jenkins LTS con JDK 17, Docker CLI, Python 3 y un volumen propio.
+
+```sh
+cd jenkins
+docker compose -p actividad3-jenkins up -d --build
+```
+
+Abre http://127.0.0.1:8080 y completa el asistente inicial. La contraseña inicial se consulta con:
+
+```sh
+docker compose -p actividad3-jenkins exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+Instala los plugins sugeridos y Docker Pipeline, JUnit, Workspace Cleanup y Pipeline Stage View. Registra la credencial global tipo Username with password con ID `dockerhub-creds`, usuario `fernandogarzon` y un PAT de Docker Hub con permiso de lectura y escritura.
+
+Crea un job Pipeline con Pipeline script from SCM, Git, la URL de este repositorio, rama `*/main` y Script Path `Jenkinsfile`. El primer build se inicia manualmente. Después, `pollSCM('H/5 * * * *')` detecta cambios en GitHub.
+
+El pipeline ejecuta Checkout, Test, Build y Push. Publica `fernandogarzon/devops-taskapi:N` y `latest`, donde N corresponde a BUILD_NUMBER. El reporte JUnit se archiva antes de limpiar el workspace. La autenticación usa `withCredentials` y `--password-stdin`, con la configuración temporal de Docker dentro del workspace y cierre de sesión al terminar.
+
+En Apple Silicon, gosu se instala desde los paquetes de Debian para obtener la arquitectura correcta. El entrypoint agrega al usuario Jenkins al grupo del socket. El servicio web escucha en la interfaz local del equipo.
+
+Para comprobar la imagen publicada:
+
+```sh
+docker pull fernandogarzon/devops-taskapi:latest
+docker run --rm -p 127.0.0.1:8002:8000 fernandogarzon/devops-taskapi:latest
+curl http://127.0.0.1:8002/health
+```
